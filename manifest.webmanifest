@@ -1,0 +1,21 @@
+{
+  "id": "./",
+  "name": "Lauf-Cockpit",
+  "short_name": "Lauf-Cockpit",
+  "description": "Persönliches Trainings-Cockpit für den Halbmarathon.",
+  "lang": "de",
+  "start_url": "./#heute",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4EEEA",
+  "theme_color": "#F4EEEA",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Von Claude einfügen", "url": "./#import=", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

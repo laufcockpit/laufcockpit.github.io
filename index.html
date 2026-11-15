@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lauf-Cockpit</title>
+<meta name="description" content="Persönliches Trainings-Cockpit für den Halbmarathon.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F4EEEA">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lauf-Cockpit">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-heute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c3.5 0 4.5-6 8-6s4.5 6 8 6"/><circle cx="12" cy="6" r="2.4"/><path d="M3 21h18"/></symbol>
+    <symbol id="i-training" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></symbol>
+    <symbol id="i-koerper" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/><path d="M8.5 11.5h2l1-2 1.5 4 1-2h1.5"/></symbol>
+    <symbol id="i-ziel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/></symbol>
+    <symbol id="i-verlauf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-daten" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.8"/><path d="M5 6v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8V6"/><path d="M5 12v6c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-paste" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2.5"/><path d="M9 4.5V3.5h6v1M9.5 11h5M9.5 15h5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5M5 20h14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+    <symbol id="i-gym" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7v10M17 7v10M4 9.5v5M20 9.5v5M7 12h10"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14.5A7.5 7.5 0 1 1 9.5 5a6 6 0 0 0 9.5 9.5z"/></symbol>
+    <symbol id="i-run" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="14.5" cy="4.5" r="1.8"/><path d="M6 20l3.5-4.5 3 2L14 13l3 2.5h3M8 10.5l3-3 3.5 1.5L13 13"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <main>
+    <section class="view" id="v-heute" aria-labelledby="h-heute"></section>
+    <section class="view" id="v-training" aria-labelledby="h-training"></section>
+    <section class="view" id="v-koerper" aria-labelledby="h-koerper"></section>
+    <section class="view" id="v-ziel" aria-labelledby="h-ziel"></section>
+    <section class="view" id="v-verlauf" aria-labelledby="h-verlauf"></section>
+  </main>
+</div>
+
+<nav class="nav" aria-label="Bereiche">
+  <div class="brand"><img src="icons/icon-192.png" alt="">Lauf-Cockpit</div>
+  <ul>
+    <li><button type="button" data-go="heute"><span class="pill"><svg aria-hidden="true"><use href="#i-heute"/></svg></span>Heute</button></li>
+    <li><button type="button" data-go="training"><span class="pill"><svg aria-hidden="true"><use href="#i-training"/></svg></span>Training</button></li>
+    <li><button type="button" data-go="koerper"><span class="pill"><svg aria-hidden="true"><use href="#i-koerper"/></svg></span>Körper</button></li>
+    <li><button type="button" data-go="ziel"><span class="pill"><svg aria-hidden="true"><use href="#i-ziel"/></svg></span>Ziel</button></li>
+    <li><button type="button" data-go="verlauf"><span class="pill"><svg aria-hidden="true"><use href="#i-verlauf"/></svg></span>Verlauf</button></li>
+  </ul>
+</nav>
+
+<button class="fab" type="button" id="fab" aria-label="Lauf eintragen"><svg aria-hidden="true"><use href="#i-plus"/></svg>Lauf</button>
+
+<!-- Lauf eintragen / bearbeiten -->
+<dialog class="sheet" id="s-run" aria-labelledby="s-run-t">
+  <form id="f-run" novalidate style="display:contents">
+    <div class="sheet-h"><h2 id="s-run-t">Lauf eintragen</h2><button type="button" class="iconbtn" data-close aria-label="Schließen"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="sheet-b">
+      <div class="fs">
+        <div class="f"><span class="lab" id="l-typ">Art</span><div class="chips" data-chips="typ" role="group" aria-labelledby="l-typ"><button type="button" data-v="Locker">Locker</button><button type="button" data-v="Long">Long Run</button><button type="button" data-v="Qualität">Qualität</button><button type="button" data-v="Wettkampf">Wettkampf</button></div></div>
+        <div class="fgrid">
+          <div class="f"><label for="r-datum">Datum</label><input id="r-datum" type="date" required></div>
+          <div class="f"><span class="lab" id="l-ort">Ort</span><div class="chips" data-chips="ort" role="group" aria-labelledby="l-ort"><button type="button" data-v="draußen">draußen</button><button type="button" data-v="Band">Band</button></div></div>
+          <div class="f"><label for="r-km">Distanz</label><div class="unit"><input id="r-km" type="text" inputmode="decimal" placeholder="10,71" autocomplete="off"><span>km</span></div></div>
+          <div class="f"><label for="r-dauer">Dauer</label><input id="r-dauer" type="text" inputmode="numeric" placeholder="1:10:41" autocomplete="off"></div>
+          <div class="f"><label for="r-hf">Ø Puls</label><div class="unit"><input id="r-hf" type="number" inputmode="numeric" min="60" max="220"><span>bpm</span></div></div>
+          <div class="f"><label for="r-hfmax">Max. Puls</label><div class="unit"><input id="r-hfmax" type="number" inputmode="numeric" min="60" max="230"><span>bpm</span></div></div>
+          <div class="f wide"><label for="r-hm">Höhenmeter</label><div class="unit"><input id="r-hm" type="number" inputmode="numeric" min="0" max="5000"><span>m</span></div></div>
+        </div>
+      </div>
+      <div class="fs" id="r-q">
+        <span class="lab">Kernteil</span>
+        <div class="f"><span class="lab" id="l-int">Format</span><div class="chips" data-chips="intensitaet" role="group" aria-labelledby="l-int"><button type="button" data-v="Schwelle">Schwelle</button><button type="button" data-v="Tempo">Tempo</button><button type="button" data-v="VO2max">VO2max</button><button type="button" data-v="Berg">Berg</button><button type="button" data-v="Fartlek">Fartlek</button><button type="button" data-v="Progression">Progression</button></div></div>
+        <div class="fgrid">
+          <div class="f"><label for="r-kern">Einheit</label><input id="r-kern" type="text" placeholder="3×6 min @ 4:50" maxlength="80"></div>
+          <div class="f"><label for="r-kernpace">Ø Pace</label><div class="unit"><input id="r-kernpace" type="text" inputmode="numeric" placeholder="4:50"><span>/km</span></div></div>
+        </div>
+      </div>
+      <div class="fs">
+        <span class="lab">Wie war's?</span>
+        <div class="f"><span class="lab" id="l-rpe">Anstrengung (RPE)</span><div class="chips rpe" data-chips="rpe" role="group" aria-labelledby="l-rpe"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button><button type="button" data-v="7">7</button><button type="button" data-v="8">8</button><button type="button" data-v="9">9</button><button type="button" data-v="10">10</button></div></div>
+        <div class="f"><span class="lab" id="l-ferse">Ferse</span><div class="chips c-ferse" data-chips="ferse" role="group" aria-labelledby="l-ferse"><button type="button" data-v="0">ruhig</button><button type="button" data-v="1">spürbar</button><button type="button" data-v="2">deutlich</button><button type="button" data-v="3">Schmerz</button></div></div>
+        <div class="f"><span class="lab" id="l-energie">Energie</span><div class="chips" data-chips="energie" role="group" aria-labelledby="l-energie"><button type="button" data-v="gut">gut</button><button type="button" data-v="normal">normal</button><button type="button" data-v="schwer">schwer</button><button type="button" data-v="kraftlos">kraftlos</button></div></div>
+        <div class="f"><span class="lab" id="l-schlaf">Schlaf davor</span><div class="chips" data-chips="schlaf" role="group" aria-labelledby="l-schlaf"><button type="button" data-v="gut">gut</button><button type="button" data-v="mittel">mittel</button><button type="button" data-v="schlecht">schlecht</button></div></div>
+        <div class="f"><span class="lab" id="l-magen">Magen</span><div class="chips" data-chips="magen" role="group" aria-labelledby="l-magen"><button type="button" data-v="ok">ok</button><button type="button" data-v="Probleme">Probleme</button></div></div>
+        <div class="f"><label for="r-strecke">Strecke</label><input id="r-strecke" type="text" list="dl-strecken" maxlength="60" placeholder="optional, z. B. Hausrunde 8 km"><datalist id="dl-strecken"></datalist></div>
+        <div class="f"><label for="r-notiz">Notiz</label><textarea id="r-notiz" maxlength="500" placeholder="Was war besonders?"></textarea></div>
+      </div>
+      <p class="err" id="r-err" role="alert"></p>
+    </div>
+    <div class="sheet-f"><button type="button" class="btn danger" id="r-del" hidden><svg aria-hidden="true"><use href="#i-trash"/></svg>Löschen</button><button type="submit" class="btn">Speichern</button></div>
+  </form>
+</dialog>
+
+<!-- Lauf-Details -->
+<dialog class="sheet" id="s-detail" aria-labelledby="s-detail-t">
+  <div class="sheet-h"><h2 id="s-detail-t">Lauf</h2><button type="button" class="iconbtn" data-close aria-label="Schließen"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <div class="sheet-b" id="detail-b"></div>
+  <div class="sheet-f"><button type="button" class="btn sec" id="d-edit"><svg aria-hidden="true"><use href="#i-edit"/></svg>Bearbeiten</button></div>
+</dialog>
+
+<!-- Wettkampf -->
+<dialog class="sheet" id="s-goal" aria-labelledby="s-goal-t">
+  <form id="f-goal" novalidate style="display:contents">
+    <div class="sheet-h"><h2 id="s-goal-t">Wettkampf hinzufügen</h2><button type="button" class="iconbtn" data-close aria-label="Schließen"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="sheet-b">
+      <div class="fs">
+        <div class="f"><label for="g-name">Name</label><input id="g-name" type="text" maxlength="80" placeholder="z. B. Halbmarathon im April"></div>
+        <div class="f"><label for="g-datum">Datum</label><input id="g-datum" type="date"></div>
+        <div class="f"><span class="lab" id="l-dist">Distanz</span><div class="chips" data-chips="dist" role="group" aria-labelledby="l-dist"><button type="button" data-v="5">5 km</button><button type="button" data-v="10">10 km</button><button type="button" data-v="21.0975">Halbmarathon</button><button type="button" data-v="42.195">Marathon</button><button type="button" data-v="x">andere</button></div></div>
+        <div class="f" id="g-km-f" hidden><label for="g-km">Distanz in km</label><input id="g-km" type="text" inputmode="decimal"></div>
+        <div class="f"><label for="g-zeit">Zielzeit</label><input id="g-zeit" type="text" inputmode="numeric" placeholder="1:35:00"></div>
+      </div>
+      <p class="err" id="g-err" role="alert"></p>
+    </div>
+    <div class="sheet-f"><button type="button" class="btn danger" id="g-del" hidden><svg aria-hidden="true"><use href="#i-trash"/></svg>Löschen</button><button type="submit" class="btn">Speichern</button></div>
+  </form>
+</dialog>
+
+<!-- Wochenplan -->
+<dialog class="sheet" id="s-plan" aria-labelledby="s-plan-t">
+  <form id="f-plan" novalidate style="display:contents">
+    <div class="sheet-h"><h2 id="s-plan-t">Wochenplan</h2><button type="button" class="iconbtn" data-close aria-label="Schließen"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="sheet-b">
+      <div class="seg" id="p-week" role="group" aria-label="Woche"></div>
+      <div class="fs" id="p-days"></div>
+      <p class="hint">Tipp: Schreib „Gym“, „Ruhetag“ oder „frei“ für Tage ohne Lauf. Alles andere zählt als geplanter Lauf.</p>
+    </div>
+    <div class="sheet-f"><button type="submit" class="btn">Plan speichern</button></div>
+  </form>
+</dialog>
+
+<!-- Daten -->
+<dialog class="sheet" id="s-data" aria-labelledby="s-data-t">
+  <div class="sheet-h"><h2 id="s-data-t">Daten</h2><button type="button" class="iconbtn" data-close aria-label="Schließen"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <div class="sheet-b">
+    <ul class="menu">
+      <li><button type="button" id="m-import"><span class="mi" style="background:var(--bahn-soft);color:var(--bahn)"><svg aria-hidden="true"><use href="#i-paste"/></svg></span><span class="mt"><b>Von Claude einfügen</b><span>Import-Code aus dem Chat übernehmen</span></span></button></li>
+      <li><button type="button" id="m-week"><span class="mi" style="background:var(--dusk-soft);color:var(--dusk)"><svg aria-hidden="true"><use href="#i-copy"/></svg></span><span class="mt"><b>Woche an Claude</b><span>Zusammenfassung kopieren und im Chat einfügen</span></span></button></li>
+    </ul>
+    <ul class="menu">
+      <li><button type="button" id="m-backup"><span class="mi" style="background:var(--apricot-soft);color:var(--warn)"><svg aria-hidden="true"><use href="#i-down"/></svg></span><span class="mt"><b>Backup speichern</b><span>Alle Daten als Datei sichern</span></span></button></li>
+      <li><button type="button" id="m-restore"><span class="mi" style="background:var(--apricot-soft);color:var(--warn)"><svg aria-hidden="true"><use href="#i-up"/></svg></span><span class="mt"><b>Backup laden</b><span>Datei auswählen und Daten übernehmen</span></span></button></li>
+    </ul>
+    <input type="file" id="m-file" accept="application/json,.json" hidden>
+    <ul class="menu">
+      <li><button type="button" id="m-wipe"><span class="mi" style="background:var(--bad-soft);color:var(--bad)"><svg aria-hidden="true"><use href="#i-trash"/></svg></span><span class="mt"><b id="m-wipe-t">Alle Daten löschen</b><span id="m-wipe-s">Läufe, Wettkämpfe und Pläne auf diesem Gerät</span></span></button></li>
+    </ul>
+    <p class="hint" id="m-info"></p>
+  </div>
+</dialog>
+
+<!-- Import -->
+<dialog class="sheet" id="s-import" aria-labelledby="s-import-t">
+  <div class="sheet-h"><h2 id="s-import-t">Von Claude einfügen</h2><button type="button" class="iconbtn" data-close aria-label="Schließen"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+  <div class="sheet-b">
+    <div class="fs">
+      <div class="f"><label for="i-code">Import-Code</label><textarea id="i-code" class="code" placeholder="LC1.…" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
+      <button type="button" class="btn sec" id="i-paste"><svg aria-hidden="true"><use href="#i-paste"/></svg>Aus Zwischenablage einfügen</button>
+    </div>
+    <p class="err" id="i-err" role="alert"></p>
+    <div id="i-prev" hidden>
+      <p class="section-t" style="padding:0 0 8px">Das wird übernommen</p>
+      <ul class="preview" id="i-list"></ul>
+    </div>
+  </div>
+  <div class="sheet-f"><button type="button" class="btn" id="i-apply" disabled>Übernehmen</button></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
