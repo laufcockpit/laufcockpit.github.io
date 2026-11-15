@@ -143,7 +143,7 @@ function drawLine(path) { if (!motion()) return; requestAnimationFrame(() => { c
 
 // ============ Navigation ============
 const VIEWS = ['heute', 'training', 'koerper', 'ziel', 'verlauf'];
-const R_ = { view: 'heute', train: 'umfang', verlaufFilter: 'Alle', zielSel: null, strecke: null };
+const R_ = { wk: 0, view: 'heute', train: 'umfang', verlaufFilter: 'Alle', zielSel: null, strecke: null };
 function go(v) {
   if (!VIEWS.includes(v)) v = 'heute';
   R_.view = v;
@@ -171,60 +171,92 @@ let rzT, lastW = window.innerWidth;
 window.addEventListener('resize', () => { if (Math.abs(window.innerWidth - lastW) < 20) return; lastW = window.innerWidth; clearTimeout(rzT); rzT = setTimeout(render, 160); });
 
 // ============ HEUTE ============
+function weekLabel(off, mo) { return off === 0 ? 'Diese Woche' : off === 1 ? 'Nächste Woche' : off === -1 ? 'Letzte Woche' : 'Woche ' + isoWeek(mo); }
+function weekRange(mo) { const a = parse(mo), e = parse(addDays(mo, 6)); return a.getUTCDate() + '.' + (a.getUTCMonth() !== e.getUTCMonth() ? ' ' + MON[a.getUTCMonth()] : '') + ' bis ' + e.getUTCDate() + '. ' + MON[e.getUTCMonth()]; }
+function weekNav(off, mo, onPrev, onNext, canPrev, canNext, onToday) {
+  return h('div', { class: 'weeknav' },
+    h('button', { class: 'arrow', type: 'button', 'aria-label': 'Vorherige Woche', disabled: !canPrev, onclick: onPrev }, h('span', { 'aria-hidden': 'true', text: '‹' })),
+    h('div', { class: 'wl', 'aria-live': 'polite' }, h('b', { text: weekLabel(off, mo) }), h('span', { text: weekRange(mo) }), off !== 0 && onToday ? h('button', { class: 'link', type: 'button', onclick: onToday }, 'Zur aktuellen Woche') : null),
+    h('button', { class: 'arrow', type: 'button', 'aria-label': 'Nächste Woche', disabled: !canNext, onclick: onNext }, h('span', { 'aria-hidden': 'true', text: '›' })));
+}
+const WK_MAX = 8;
 function renderHeute(R) {
-  const t = todayIso(), mo = monday(t), di = (parse(t).getUTCDay() + 6) % 7;
+  const t = todayIso(), cmo = monday(t);
+  const minOff = R.length ? Math.round((+parse(monday(R[0].datum)) - +parse(cmo)) / (7 * DAY)) : -1;
+  R_.wk = Math.max(Math.min(R_.wk || 0, WK_MAX), Math.min(minOff, 0));
+  const off = R_.wk, mo = addDays(cmo, 7 * off), isCur = off === 0;
+  const di = isCur ? (parse(t).getUTCDay() + 6) % 7 : -1;
   const wk = R.filter((r) => monday(r.datum) === mo);
   const km = wk.reduce((a, r) => a + (r.km || 0), 0);
   const plan = planFor(mo);
   const planned = TAGE.filter((k) => isRunPlan(plan[k])).length;
+  const doneRuns = new Set(wk.map((r) => r.datum)).size;
   let next = null;
-  for (let i = di; i < 7; i++) { const day = addDays(mo, i); if (isRunPlan(plan[TAGE[i]]) && !wk.some((r) => r.datum === day)) { next = { i, p: plan[TAGE[i]] }; break; } }
+  if (off >= 0) for (let i = Math.max(di, 0); i < 7; i++) { const day = addDays(mo, i); if (isRunPlan(plan[TAGE[i]]) && !wk.some((r) => r.datum === day)) { next = { i, p: plan[TAGE[i]] }; break; } }
 
   const root = h('div', { class: 'screen' });
   root.append(topbar('heute', 'Heute', dLong(t) + ', Woche ' + isoWeek(t), dataBtn()));
 
-  // Hero: Wochenbahn
-  const hero = h('section', { class: 'hero', 'aria-label': 'Diese Woche' });
-  const doneRuns = new Set(wk.map((r) => r.datum)).size;
+  // Hero: Wochenbahn mit Wochen-Navigation
+  const hero = h('section', { class: 'hero', 'aria-label': weekLabel(off, mo) });
+  const goWeek = (d) => { R_.wk = off + d; render(); };
+  hero.append(weekNav(off, mo, () => goWeek(-1), () => goWeek(1), off > Math.min(minOff, 0), off < WK_MAX, () => { R_.wk = 0; render(); }));
+  const future = off > 0;
   hero.append(h('div', { class: 'hero-top' },
     h('div', { class: 'hero-km' }, de(km, 1), h('small', { text: 'km' })),
-    h('p', { class: 'hero-of' }, planned ? h('b', { text: Math.min(doneRuns, 99) + ' von ' + planned }) : h('b', { text: plural(wk.length, 'Lauf', 'Läufe') }), h('br'), planned ? 'geplanten Läufen' : 'diese Woche')));
+    h('p', { class: 'hero-of' },
+      future ? h('b', { text: plural(planned, 'Lauf', 'Läufe') }) : planned ? h('b', { text: Math.min(doneRuns, 99) + ' von ' + planned }) : h('b', { text: plural(wk.length, 'Lauf', 'Läufe') }),
+      h('br'), future ? 'geplant' : planned ? 'geplanten Läufen' : (isCur ? 'diese Woche' : 'gelaufen'))));
   const lanes = h('div', { class: 'lanes' });
   let li = 0;
   for (let i = 0; i < 7; i++) {
     const day = addDays(mo, i), dr = wk.filter((r) => r.datum === day), p = plan[TAGE[i]] || '';
-    const isNext = next && next.i === i, isToday = i === di;
+    const isNext = isCur && next && next.i === i, isToday = day === t;
     let cls = 'lane', content;
     if (dr.length) {
-      const k = dr.reduce((a, r) => a + (r.km || 0), 0), main = dr.slice().sort((a, b) => (b.km || 0) - (a.km || 0))[0];
-      cls += ' run';
+      const k = dr.reduce((a, r) => a + (r.km || 0), 0), main = dr.slice().sort((a, b2) => (b2.km || 0) - (a.km || 0))[0];
       content = [h('span', { class: 'dn', text: TAGN[i] }), h('span', { class: 'kv', text: de(k, k >= 10 ? 0 : 1) })];
-      const b = h('button', { class: cls + (isToday ? ' today' : ''), type: 'button', style: '--i:' + (li++) + ';--c:' + TYPC[typKey(main.typ)], 'aria-label': TAGN[i] + ': ' + runTitle(main) + ', ' + de(k, 1) + ' km', onclick: () => openDetail(main.id) }, content);
-      lanes.append(b);
+      lanes.append(h('button', { class: 'lane run' + (isToday ? ' today' : ''), type: 'button', style: '--i:' + (li++) + ';--c:' + TYPC[typKey(main.typ)], 'aria-label': TAGN[i] + ': ' + runTitle(main) + ', ' + de(k, 1) + ' km', onclick: () => openDetail(main.id) }, content));
       continue;
     }
     if (isNext) { cls += ' next'; content = [h('span', { class: 'dn', text: TAGN[i] }), icon('run', 'ic')]; }
     else if (/gym|kraft/i.test(p)) { cls += ' gym'; content = [h('span', { class: 'dn', text: TAGN[i] }), icon('gym', 'ic')]; }
     else if (day < t && isRunPlan(p)) { cls += ' missed'; content = [h('span', { class: 'dn', text: TAGN[i] }), h('span', { class: 'kv', text: '–' })]; }
-    else if (isRunPlan(p)) { content = [h('span', { class: 'dn', text: TAGN[i] }), icon('run', 'ic')]; }
+    else if (isRunPlan(p)) { cls += future ? ' next' : ''; content = [h('span', { class: 'dn', text: TAGN[i] }), icon('run', 'ic')]; }
     else { content = [h('span', { class: 'dn', text: TAGN[i] }), icon('moon', 'ic')]; }
     lanes.append(h('div', { class: cls + (isToday ? ' today' : ''), role: 'img', 'aria-label': TAGN[i] + ': ' + (p || 'nichts geplant') }, content));
   }
-  hero.append(h('div', { class: 'track' }, lanes));
-  if (next) {
-    hero.append(h('div', { class: 'hero-next' }, h('span', { class: 'ic' }, icon('run')), h('span', { class: 'tx' }, h('b', { text: next.p }), h('span', { text: next.i === di ? 'Heute' : 'Als Nächstes, ' + WTAG[(next.i + 1) % 7] }))));
-  } else {
-    hero.append(h('div', { class: 'hero-next' }, h('span', { class: 'ic' }, icon('ziel')), h('span', { class: 'tx' }, h('b', { text: Object.keys(plan).length ? 'Keine weiteren Läufe geplant' : 'Noch kein Plan für diese Woche' }), h('span', { text: Object.keys(plan).length ? 'Erholung zählt auch.' : 'Leg den Plan an, dann zeigt die Bahn deine Woche.' }))));
+  const track = h('div', { class: 'track' }, lanes);
+  // Wischen wechselt die Woche
+  let sx = null, sy = null;
+  track.addEventListener('pointerdown', (e) => { sx = e.clientX; sy = e.clientY; });
+  track.addEventListener('pointerup', (e) => { if (sx == null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) { const d = dx < 0 ? 1 : -1; const n = off + d; if (n <= WK_MAX && n >= Math.min(minOff, 0)) goWeek(d); } });
+  hero.append(track);
+  if (isCur) {
+    if (next) hero.append(h('div', { class: 'hero-next' }, h('span', { class: 'ic' }, icon('run')), h('span', { class: 'tx' }, h('b', { text: next.p }), h('span', { text: next.i === di ? 'Heute' : 'Als Nächstes, ' + WTAG[(next.i + 1) % 7] }))));
+    else hero.append(h('div', { class: 'hero-next' }, h('span', { class: 'ic' }, icon('ziel')), h('span', { class: 'tx' }, h('b', { text: Object.keys(plan).length ? 'Keine weiteren Läufe geplant' : 'Noch kein Plan für diese Woche' }), h('span', { text: Object.keys(plan).length ? 'Erholung zählt auch. Mit › siehst du die nächste Woche.' : 'Leg den Plan an, dann zeigt die Bahn deine Woche.' }))));
   }
-  hero.append(h('div', { class: 'btnrow' }, h('button', { class: 'btn ghost', type: 'button', onclick: () => openPlan(mo) }, 'Plan bearbeiten')));
+  // Tagesplan der gewählten Woche
+  if (Object.keys(plan).length || wk.length) {
+    const ul = h('ul', { class: 'plan', 'aria-label': 'Plan ' + weekLabel(off, mo) });
+    for (let i = 0; i < 7; i++) {
+      const day = addDays(mo, i), p = plan[TAGE[i]] || '', dr = wk.filter((r) => r.datum === day);
+      const dot = dr.length ? 'done' : /gym|kraft/i.test(p) ? 'gym' : (isCur && next && next.i === i) ? 'next' : '';
+      const status = dr.length ? tag('✓ ' + dr.map((x) => de(x.km, 1)).join(' + ') + ' km', 'ok') : (day < t && isRunPlan(p) ? tag('offen', '') : null);
+      ul.append(h('li', { class: day === t ? 'today' : null }, h('span', { class: 'pd ' + dot, 'aria-hidden': 'true' }), h('span', { class: 'dd', text: TAGN[i] }), h('span', { class: 'tt' + (p || dr.length ? '' : ' none'), text: p || (dr.length ? runTitle(dr[0]) : '–') }), status || h('span')));
+    }
+    hero.append(ul);
+  }
+  hero.append(h('div', { class: 'btnrow' }, h('button', { class: 'btn ghost', type: 'button', onclick: () => openPlan(mo) }, Object.keys(plan).length ? 'Plan bearbeiten' : 'Plan anlegen')));
   root.append(hero);
+  const cwk = R.filter((r) => monday(r.datum) === cmo), ckm = cwk.reduce((a, r) => a + (r.km || 0), 0);
 
   // Kennzahlen
   const g = nextGoal(), gKm = g ? g.distanz_km : 21.0975, pred = predict(R, gKm);
   const st = streak(R);
   const thr = R.filter((r) => ['Schwelle', 'Progression'].includes(r.intensitaet) && r.kern_pace_s);
   const lt = thr[thr.length - 1];
-  const W = weeks(R, addDays(mo, -28), t), prev4 = W.slice(0, 4), avg4 = prev4.reduce((a, w) => a + w.km, 0) / 4;
+  const W = weeks(R, addDays(cmo, -28), t), prev4 = W.slice(0, 4), avg4 = prev4.reduce((a, w) => a + w.km, 0) / 4;
 
   const sZ = h('button', { class: 'stat', type: 'button', onclick: () => go('ziel') }, h('span', { class: 'k', text: g ? g.name + ', Ziel ' + dur(g.zielzeit_s).replace(/:00$/, '') : 'Halbmarathon' }),
     h('span', { class: 'v' }, pred ? dur(pred.t) : '–'),
@@ -232,7 +264,7 @@ function renderHeute(R) {
   if (g && pred) { const p0 = firstPred(R, gKm); if (p0 && p0.t > g.zielzeit_s) sZ.append(goalBar(p0, pred, g, true)); }
   const sF = h('button', { class: 'stat', type: 'button', onclick: () => go('koerper') }, h('span', { class: 'k', text: 'Ferse' }), st.total ? h('span', { class: 'v' }, String(st.n), h('small', { text: st.n === 1 ? 'Lauf' : 'Läufe' })) : h('span', { class: 'v', text: '–' }), h('span', { class: 'd', text: st.total ? 'in Folge ohne deutliches Signal' : 'Noch keine Einträge' }), st.total ? fersenStrip(R, 14) : null);
   const sS = h('button', { class: 'stat', type: 'button', onclick: () => { R_.train = 'quali'; go('training'); } }, h('span', { class: 'k', text: 'Schwellentempo' }), h('span', { class: 'v' }, lt ? pace(lt.kern_pace_s) : '–', lt ? h('small', { text: '/km' }) : null), h('span', { class: 'd', text: lt ? dShort(lt.datum) + ', ' + (lt.kern || '') : 'Noch keine Schwelle' }));
-  const sU = h('button', { class: 'stat', type: 'button', onclick: () => { R_.train = 'umfang'; go('training'); } }, h('span', { class: 'k', text: 'Vier-Wochen-Schnitt' }), h('span', { class: 'v' }, de(avg4, 1), h('small', { text: 'km/Woche' })), h('span', { class: 'd', text: R.length ? 'Obergrenze nächste Woche ' + de(Math.max(km, W[3] ? W[3].km : 0) * 1.1, 0) + ' km' : 'Noch keine Läufe' }));
+  const sU = h('button', { class: 'stat', type: 'button', onclick: () => { R_.train = 'umfang'; go('training'); } }, h('span', { class: 'k', text: 'Vier-Wochen-Schnitt' }), h('span', { class: 'v' }, de(avg4, 1), h('small', { text: 'km/Woche' })), h('span', { class: 'd', text: R.length ? 'Obergrenze nächste Woche ' + de(Math.max(ckm, W[3] ? W[3].km : 0) * 1.1, 0) + ' km' : 'Noch keine Läufe' }));
   root.append(h('div', { class: 'grid2' }, sZ, sF, sS, sU));
 
   // Zuletzt
@@ -744,8 +776,8 @@ $('#g-del').addEventListener('click', () => {
 let planWeek = null;
 function openPlan(mo) { planWeek = mo; fillPlan(); openSheet($('#s-plan')); }
 function fillPlan() {
-  const cur = monday(todayIso());
-  $('#p-week').replaceChildren(...[[cur, 'Diese Woche'], [addDays(cur, 7), 'Nächste Woche']].map(([w, n]) => h('button', { type: 'button', 'aria-pressed': String(w === planWeek), onclick: () => { planWeek = w; fillPlan(); } }, n + ', ab ' + dShort(w))));
+  const cur = monday(todayIso()), off = Math.round((+parse(planWeek) - +parse(cur)) / (7 * DAY));
+  $('#p-week').replaceChildren(weekNav(off, planWeek, () => { planWeek = addDays(planWeek, -7); fillPlan(); }, () => { planWeek = addDays(planWeek, 7); fillPlan(); }, off > -52, off < WK_MAX, null));
   const p = planFor(planWeek);
   $('#p-days').replaceChildren(...TAGE.map((k, i) => h('div', { class: 'f' }, h('label', { for: 'p-' + k, text: WTAG[(i + 1) % 7] + ', ' + dShort(addDays(planWeek, i)) }), h('input', { id: 'p-' + k, type: 'text', maxlength: '80', value: p[k] || '', placeholder: i === 0 ? 'z. B. Ruhetag' : '' }))));
 }

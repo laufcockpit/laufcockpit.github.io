@@ -102,7 +102,7 @@ button.stat:active{transform:scale(.985)}
 .hero-km small{font-size:24px;margin-left:4px;color:var(--ink-2)}
 .hero-of{font-size:15px;color:var(--muted);text-align:right;line-height:1.35}
 .hero-of b{color:var(--ink);font-weight:700}
-.track{position:relative;border-radius:18px;background:var(--bahn);padding:10px 8px;box-shadow:inset 0 2px 6px rgba(80,15,8,.35)}
+.track{touch-action:pan-y;position:relative;border-radius:18px;background:var(--bahn);padding:10px 8px;box-shadow:inset 0 2px 6px rgba(80,15,8,.35)}
 .track::before,.track::after{content:"";position:absolute;left:10px;right:10px;height:2px;background:rgba(255,255,255,.55);border-radius:1px}
 .track::before{top:6px}.track::after{bottom:6px}
 .lanes{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -128,6 +128,18 @@ button.stat:active{transform:scale(.985)}
   @keyframes lanein{from{opacity:0;transform:translateY(6px)}}
 }
 
+/* Wochen-Navigation */
+.weeknav{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;margin:-6px -6px 0}
+.weeknav .arrow{appearance:none;border:0;width:44px;height:44px;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:26px;line-height:1;display:grid;place-items:center;padding-bottom:3px;transition:transform .14s var(--ease-out)}
+.weeknav .arrow:active{transform:scale(.95)}
+.weeknav .arrow[disabled]{opacity:.35}
+.weeknav .wl{display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.25}
+.weeknav .wl b{font-size:16px;font-weight:700}
+.weeknav .wl span{font-size:14px;color:var(--muted)}
+.weeknav .wl .link{padding:2px 4px;font-size:14px}
+#p-week{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--lift);padding:14px 12px}
+#p-week .weeknav{margin:0}
+.hero .plan{margin:-2px 0}
 /* Ziel-Bahn: von der ersten Schätzung zur Zielzeit */
 .goalbar{position:relative;height:34px;margin-top:6px}
 .goalbar .rail{position:absolute;left:0;right:0;top:10px;height:8px;border-radius:4px;background:var(--sunk)}
@@ -169,7 +181,7 @@ button.row:active{background:var(--surface-2)}
 .plan .dd{font-weight:700;color:var(--muted);font-size:15px}
 .plan li.today .dd{color:var(--bahn)}
 .plan .tt{font-size:15px;min-width:0}
-.plan .tt.empty{color:var(--muted)}
+.plan .tt.none{color:var(--muted)}
 
 /* Segment-Umschalter */
 .seg{display:flex;background:var(--sunk);padding:3px;border-radius:14px;gap:2px;overflow-x:auto;scrollbar-width:none}
