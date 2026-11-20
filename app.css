@@ -181,6 +181,8 @@ button.prow:active{background:var(--surface-2)}
 .plan [aria-expanded="true"] .chev{transform:rotate(180deg)}
 .plan .pdet{margin:0 0 12px 30px;padding:12px 14px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
 .plan .ptxt{font-size:15px;line-height:1.5;color:var(--ink);white-space:pre-line}
+.plan .ptxt.none{color:var(--muted);white-space:normal}
+.plan .ptxt .link{padding:0;font-size:15px}
 .plan .prun{appearance:none;border:0;background:var(--surface);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;box-shadow:inset 0 0 0 1px var(--line)}
 .plan .prun span{display:flex;flex-direction:column;min-width:0}
 .plan .prun b{font-weight:700;font-size:15px}

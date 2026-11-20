@@ -64,6 +64,7 @@ const plural = (n, a, b) => n + ' ' + (n === 1 ? a : b);
 
 // ============ Speicher ============
 const KEY = 'laufcockpit.v1';
+const APP_VERSION = '4 (20.11.2026)';
 const store = { laeufe: {}, ziele: {}, plan: {} };
 function load() {
   try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); store.laeufe = d.laeufe || {}; store.ziele = d.ziele || {}; store.plan = d.plan || {}; } }
@@ -245,12 +246,12 @@ function renderHeute(R) {
       const day = addDays(mo, i), p = plan[TAGE[i]] || '', dr = wk.filter((r) => r.datum === day), dt = det[TAGE[i]] || '';
       const dot = dr.length ? 'done' : /gym|kraft/i.test(p) ? 'gym' : (isCur && next && next.i === i) ? 'next' : '';
       const status = dr.length ? tag('✓ ' + dr.map((x) => de(x.km, 1)).join(' + ') + ' km', 'ok') : (day < t && isRunPlan(p) ? tag('offen', '') : null);
-      const cells = [h('span', { class: 'pd ' + dot, 'aria-hidden': 'true' }), h('span', { class: 'dd', text: TAGN[i] }), h('span', { class: 'tt' + (p || dr.length ? '' : ' none'), text: p || (dr.length ? runTitle(dr[0]) : '–') }), h('span', { class: 'st' }, status, (dt || dr.length) ? icon('chev', 'chev') : null)];
-      if (!dt && !dr.length) { ul.append(h('li', { class: day === t ? 'today' : null }, h('div', { class: 'prow' }, cells))); continue; }
+      const cells = [h('span', { class: 'pd ' + dot, 'aria-hidden': 'true' }), h('span', { class: 'dd', text: TAGN[i] }), h('span', { class: 'tt' + (p || dr.length ? '' : ' none'), text: p || (dr.length ? runTitle(dr[0]) : '–') }), h('span', { class: 'st' }, status, (dt || dr.length || p) ? icon('chev', 'chev') : null)];
+      if (!dt && !dr.length && !p) { ul.append(h('li', { class: day === t ? 'today' : null }, h('div', { class: 'prow' }, cells))); continue; }
       const open = R_.openDays.has(day);
       const pid = 'pd-' + day;
       const panel = h('div', { class: 'pdet', id: pid, hidden: !open },
-        dt ? h('p', { class: 'ptxt', text: dt }) : null,
+        dt ? h('p', { class: 'ptxt', text: dt }) : (!dr.length ? h('p', { class: 'ptxt none' }, 'Für diesen Tag sind noch keine Details hinterlegt. ', h('button', { class: 'link', type: 'button', onclick: () => openPlan(mo) }, 'Details ergänzen')) : null),
         dr.map((r) => h('button', { class: 'prun', type: 'button', onclick: () => openDetail(r.id) }, typDot(r.typ), h('span', null, h('b', { text: 'Gelaufen: ' + runTitle(r) }), h('small', { text: [r.km ? de(r.km, 2) + ' km' : null, r.dauer_s ? dur(r.dauer_s) : null, r.pace_s ? pace(r.pace_s) + ' /km' : null, r.hf ? r.hf + ' bpm' : null].filter(Boolean).join(', ') })), h('span', { class: 'go', 'aria-hidden': 'true', text: '›' }))));
       const btn = h('button', { class: 'prow', type: 'button', 'aria-expanded': String(open), 'aria-controls': pid, onclick: () => { const o = btn.getAttribute('aria-expanded') !== 'true'; btn.setAttribute('aria-expanded', String(o)); panel.hidden = !o; if (o) R_.openDays.add(day); else R_.openDays.delete(day); } }, cells);
       ul.append(h('li', { class: (day === t ? 'today ' : '') + 'has-det' }, btn, panel));
@@ -809,7 +810,7 @@ $('#f-plan').addEventListener('submit', (e) => {
 // ---- Daten ----
 function openData() {
   const n = Object.keys(store.laeufe).length, z = Object.keys(store.ziele).length;
-  $('#m-info').textContent = 'Auf diesem Gerät: ' + plural(n, 'Lauf', 'Läufe') + ', ' + plural(z, 'Wettkampf', 'Wettkämpfe') + ', ' + plural(Object.keys(store.plan).length, 'Wochenplan', 'Wochenpläne') + '. Die Daten verlassen das Gerät nur, wenn du ein Backup speicherst oder die Woche kopierst.';
+  $('#m-info').textContent = 'Auf diesem Gerät: ' + plural(n, 'Lauf', 'Läufe') + ', ' + plural(z, 'Wettkampf', 'Wettkämpfe') + ', ' + plural(Object.keys(store.plan).length, 'Wochenplan', 'Wochenpläne') + '. Die Daten verlassen das Gerät nur, wenn du ein Backup speicherst oder die Woche kopierst. App-Version ' + APP_VERSION + '.';
   const w = $('#m-wipe'); w.dataset.armed = ''; $('#m-wipe-t').textContent = 'Alle Daten löschen'; $('#m-wipe-s').textContent = 'Läufe, Wettkämpfe und Pläne auf diesem Gerät';
   openSheet($('#s-data'));
 }
@@ -942,7 +943,14 @@ if (hash.startsWith('import=')) {
 window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (v.startsWith('import=')) { const code = decodeURIComponent(v.slice(7)); history.replaceState(null, '', '#' + R_.view); openImport(code); } else if (VIEWS.includes(v) && v !== R_.view) go(v); });
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+      reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded || openSheetEl) return; reloaded = true; location.reload(); });
+  });
 }
 window.__lc = { store, runs, save, render, weekSummary };
 })();
