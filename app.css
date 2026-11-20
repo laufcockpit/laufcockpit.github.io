@@ -172,7 +172,25 @@ button.row:active{background:var(--surface-2)}
 
 /* Plan */
 .plan{list-style:none;margin:0;padding:0}
-.plan li{display:grid;grid-template-columns:30px 34px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:46px;border-top:1px solid var(--line)}
+.plan li{border-top:1px solid var(--line)}
+.plan .prow{display:grid;grid-template-columns:30px 34px minmax(0,1fr) auto;align-items:center;gap:8px;min-height:46px;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit;color:inherit}
+button.prow{cursor:pointer;border-radius:10px}
+button.prow:active{background:var(--surface-2)}
+.plan .st{display:inline-flex;align-items:center;gap:6px;justify-self:end}
+.plan .chev{width:18px;height:18px;color:var(--muted);transition:transform .22s var(--ease-out)}
+.plan [aria-expanded="true"] .chev{transform:rotate(180deg)}
+.plan .pdet{margin:0 0 12px 30px;padding:12px 14px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.plan .ptxt{font-size:15px;line-height:1.5;color:var(--ink);white-space:pre-line}
+.plan .prun{appearance:none;border:0;background:var(--surface);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;text-align:left;box-shadow:inset 0 0 0 1px var(--line)}
+.plan .prun span{display:flex;flex-direction:column;min-width:0}
+.plan .prun b{font-weight:700;font-size:15px}
+.plan .prun small{font-size:13px;color:var(--muted)}
+.plan .prun .go{font-size:22px;color:var(--muted)}
+@media (max-width:440px){.plan .pdet{margin-left:0}}
+@media (prefers-reduced-motion:no-preference){.plan .pdet:not([hidden]){animation:detin .22s var(--ease-out)}@keyframes detin{from{opacity:0;transform:translateY(-4px)}}}
+.pday{padding-bottom:12px;border-bottom:1px solid var(--line)}
+.pday:last-child{border-bottom:0;padding-bottom:0}
+.f textarea.pdtl{min-height:64px;font-size:15px}
 .plan li:first-child{border-top:0}
 .plan .pd{width:16px;height:16px;border-radius:50%;background:var(--sunk);justify-self:center}
 .plan .pd.done{background:var(--bahn-fill)}

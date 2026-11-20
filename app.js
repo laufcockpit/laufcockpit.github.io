@@ -83,6 +83,7 @@ function runs() {
 }
 const goals = () => Object.entries(store.ziele).map(([id, z]) => ({ ...z, id })).sort((a, b) => (a.datum < b.datum ? -1 : 1));
 const planFor = (mo) => (store.plan[mo] && store.plan[mo].tage) || {};
+const planDetails = (mo) => (store.plan[mo] && store.plan[mo].details) || {};
 const isRunPlan = (p) => !!p && !/^(gym|ruhe|ruhetag|frei|pause|krafttraining)\b|ausgefallen|^—$/i.test(p.trim());
 
 // ============ Rechnen ============
@@ -143,7 +144,7 @@ function drawLine(path) { if (!motion()) return; requestAnimationFrame(() => { c
 
 // ============ Navigation ============
 const VIEWS = ['heute', 'training', 'koerper', 'ziel', 'verlauf'];
-const R_ = { wk: 0, view: 'heute', train: 'umfang', verlaufFilter: 'Alle', zielSel: null, strecke: null };
+const R_ = { openDays: new Set(), wk: 0, view: 'heute', train: 'umfang', verlaufFilter: 'Alle', zielSel: null, strecke: null };
 function go(v) {
   if (!VIEWS.includes(v)) v = 'heute';
   R_.view = v;
@@ -239,11 +240,20 @@ function renderHeute(R) {
   // Tagesplan der gewählten Woche
   if (Object.keys(plan).length || wk.length) {
     const ul = h('ul', { class: 'plan', 'aria-label': 'Plan ' + weekLabel(off, mo) });
+    const det = planDetails(mo);
     for (let i = 0; i < 7; i++) {
-      const day = addDays(mo, i), p = plan[TAGE[i]] || '', dr = wk.filter((r) => r.datum === day);
+      const day = addDays(mo, i), p = plan[TAGE[i]] || '', dr = wk.filter((r) => r.datum === day), dt = det[TAGE[i]] || '';
       const dot = dr.length ? 'done' : /gym|kraft/i.test(p) ? 'gym' : (isCur && next && next.i === i) ? 'next' : '';
       const status = dr.length ? tag('✓ ' + dr.map((x) => de(x.km, 1)).join(' + ') + ' km', 'ok') : (day < t && isRunPlan(p) ? tag('offen', '') : null);
-      ul.append(h('li', { class: day === t ? 'today' : null }, h('span', { class: 'pd ' + dot, 'aria-hidden': 'true' }), h('span', { class: 'dd', text: TAGN[i] }), h('span', { class: 'tt' + (p || dr.length ? '' : ' none'), text: p || (dr.length ? runTitle(dr[0]) : '–') }), status || h('span')));
+      const cells = [h('span', { class: 'pd ' + dot, 'aria-hidden': 'true' }), h('span', { class: 'dd', text: TAGN[i] }), h('span', { class: 'tt' + (p || dr.length ? '' : ' none'), text: p || (dr.length ? runTitle(dr[0]) : '–') }), h('span', { class: 'st' }, status, (dt || dr.length) ? icon('chev', 'chev') : null)];
+      if (!dt && !dr.length) { ul.append(h('li', { class: day === t ? 'today' : null }, h('div', { class: 'prow' }, cells))); continue; }
+      const open = R_.openDays.has(day);
+      const pid = 'pd-' + day;
+      const panel = h('div', { class: 'pdet', id: pid, hidden: !open },
+        dt ? h('p', { class: 'ptxt', text: dt }) : null,
+        dr.map((r) => h('button', { class: 'prun', type: 'button', onclick: () => openDetail(r.id) }, typDot(r.typ), h('span', null, h('b', { text: 'Gelaufen: ' + runTitle(r) }), h('small', { text: [r.km ? de(r.km, 2) + ' km' : null, r.dauer_s ? dur(r.dauer_s) : null, r.pace_s ? pace(r.pace_s) + ' /km' : null, r.hf ? r.hf + ' bpm' : null].filter(Boolean).join(', ') })), h('span', { class: 'go', 'aria-hidden': 'true', text: '›' }))));
+      const btn = h('button', { class: 'prow', type: 'button', 'aria-expanded': String(open), 'aria-controls': pid, onclick: () => { const o = btn.getAttribute('aria-expanded') !== 'true'; btn.setAttribute('aria-expanded', String(o)); panel.hidden = !o; if (o) R_.openDays.add(day); else R_.openDays.delete(day); } }, cells);
+      ul.append(h('li', { class: (day === t ? 'today ' : '') + 'has-det' }, btn, panel));
     }
     hero.append(ul);
   }
@@ -774,17 +784,24 @@ $('#g-del').addEventListener('click', () => {
 
 // ---- Plan ----
 let planWeek = null;
-function openPlan(mo) { planWeek = mo; fillPlan(); openSheet($('#s-plan')); }
+const growTa = (el) => { el.style.height = 'auto'; el.style.height = Math.max(64, el.scrollHeight + 3) + 'px'; };
+function openPlan(mo) { planWeek = mo; fillPlan(); openSheet($('#s-plan')); requestAnimationFrame(() => $$('.pdtl').forEach(growTa)); }
 function fillPlan() {
   const cur = monday(todayIso()), off = Math.round((+parse(planWeek) - +parse(cur)) / (7 * DAY));
-  $('#p-week').replaceChildren(weekNav(off, planWeek, () => { planWeek = addDays(planWeek, -7); fillPlan(); }, () => { planWeek = addDays(planWeek, 7); fillPlan(); }, off > -52, off < WK_MAX, null));
-  const p = planFor(planWeek);
-  $('#p-days').replaceChildren(...TAGE.map((k, i) => h('div', { class: 'f' }, h('label', { for: 'p-' + k, text: WTAG[(i + 1) % 7] + ', ' + dShort(addDays(planWeek, i)) }), h('input', { id: 'p-' + k, type: 'text', maxlength: '80', value: p[k] || '', placeholder: i === 0 ? 'z. B. Ruhetag' : '' }))));
+  const sw = (d) => { planWeek = addDays(planWeek, d); fillPlan(); requestAnimationFrame(() => $$('.pdtl').forEach(growTa)); };
+  $('#p-week').replaceChildren(weekNav(off, planWeek, () => sw(-7), () => sw(7), off > -52, off < WK_MAX, null));
+  const p = planFor(planWeek), dt = planDetails(planWeek);
+  $('#p-days').replaceChildren(...TAGE.map((k, i) => {
+    const ta = h('textarea', { id: 'pd-' + k, class: 'pdtl', maxlength: '1500', rows: '2', placeholder: 'Details, z. B. Einlaufen, Tempo, Pace, Auslaufen', 'aria-label': 'Details ' + WTAG[(i + 1) % 7] });
+    ta.value = dt[k] || ''; ta.addEventListener('input', () => growTa(ta));
+    return h('div', { class: 'f pday' }, h('label', { for: 'p-' + k, text: WTAG[(i + 1) % 7] + ', ' + dShort(addDays(planWeek, i)) }), h('input', { id: 'p-' + k, type: 'text', maxlength: '80', value: p[k] || '', placeholder: i === 0 ? 'z. B. Ruhetag' : '' }), ta);
+  }));
 }
 $('#f-plan').addEventListener('submit', (e) => {
   e.preventDefault();
-  const tage = {}; TAGE.forEach((k) => { const v = $('#p-' + k).value.trim(); if (v) tage[k] = v; });
-  if (Object.keys(tage).length) store.plan[planWeek] = { tage }; else delete store.plan[planWeek];
+  const tage = {}, details = {};
+  TAGE.forEach((k) => { const v = $('#p-' + k).value.trim(); if (v) tage[k] = v; const d = $('#pd-' + k).value.trim(); if (d) details[k] = d; });
+  if (Object.keys(tage).length || Object.keys(details).length) store.plan[planWeek] = Object.keys(details).length ? { tage, details } : { tage }; else delete store.plan[planWeek];
   if (!save()) return;
   closeSheet($('#s-plan')); toast('Plan gespeichert'); render();
 });
@@ -891,7 +908,12 @@ function showPreview(d) {
     items.push({ kind: 'lauf', id: tid, data: r, label: dShort(r.datum) + ', ' + (TYPN[r.typ] || r.typ) + (r.km ? ', ' + de(r.km, 2) + ' km' : ''), neu: !store.laeufe[tid] });
   });
   Z.forEach((z) => { const id = z.id && /^[\w\-]+$/.test(z.id) ? z.id : 'z' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); items.push({ kind: 'ziel', id, data: { name: String(z.name).slice(0, 80), datum: z.datum, distanz_km: +z.distanz_km, zielzeit_s: +z.zielzeit_s }, label: 'Wettkampf: ' + z.name, neu: !store.ziele[id] }); });
-  P.forEach(([k, v]) => { const tage = {}; TAGE.forEach((d2) => { if (typeof v.tage[d2] === 'string' && v.tage[d2].trim()) tage[d2] = v.tage[d2].trim().slice(0, 80); }); items.push({ kind: 'plan', id: monday(k), data: { tage }, label: 'Wochenplan ab ' + dShort(monday(k)), neu: !store.plan[monday(k)] }); });
+  P.forEach(([k, v]) => {
+    const tage = {}, details = {};
+    TAGE.forEach((d2) => { if (typeof v.tage[d2] === 'string' && v.tage[d2].trim()) tage[d2] = v.tage[d2].trim().slice(0, 80); if (v.details && typeof v.details[d2] === 'string' && v.details[d2].trim()) details[d2] = v.details[d2].trim().slice(0, 1500); });
+    const nd = Object.keys(details).length;
+    items.push({ kind: 'plan', id: monday(k), data: nd ? { tage, details } : { tage }, label: 'Wochenplan ab ' + dShort(monday(k)) + (nd ? ' mit Details' : ''), neu: !store.plan[monday(k)] });
+  });
   pending = items;
   const shown = items.slice(0, 40);
   $('#i-list').replaceChildren(...[...shown.map((it) => h('li', null, h('span', { text: it.label }), tag(it.neu ? 'neu' : 'ersetzt', it.neu ? 'ok' : 'warn'))), items.length > shown.length ? h('li', null, h('span', { text: 'und ' + (items.length - shown.length) + ' weitere' })) : null].filter(Boolean));
