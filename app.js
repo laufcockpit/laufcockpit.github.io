@@ -64,7 +64,7 @@ const plural = (n, a, b) => n + ' ' + (n === 1 ? a : b);
 
 // ============ Speicher ============
 const KEY = 'laufcockpit.v1';
-const APP_VERSION = '4 (20.11.2026)';
+const APP_VERSION = '5 (22.11.2026)';
 const store = { laeufe: {}, ziele: {}, plan: {} };
 function load() {
   try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); store.laeufe = d.laeufe || {}; store.ziele = d.ziele || {}; store.plan = d.plan || {}; } }
@@ -85,7 +85,7 @@ function runs() {
 const goals = () => Object.entries(store.ziele).map(([id, z]) => ({ ...z, id })).sort((a, b) => (a.datum < b.datum ? -1 : 1));
 const planFor = (mo) => (store.plan[mo] && store.plan[mo].tage) || {};
 const planDetails = (mo) => (store.plan[mo] && store.plan[mo].details) || {};
-const isRunPlan = (p) => !!p && !/^(gym|ruhe|ruhetag|frei|pause|krafttraining)\b|ausgefallen|^—$/i.test(p.trim());
+const isRunPlan = (p) => !!p && !/^(gym|ruhe|ruhetag|frei|pause|krafttraining|dienstreise|reise|urlaub|krank)\b|ausgefallen|^—$/i.test(p.trim());
 
 // ============ Rechnen ============
 function weeks(R, from, to) {
