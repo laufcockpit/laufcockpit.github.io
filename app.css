@@ -333,3 +333,13 @@ dialog.sheet::backdrop{background:rgba(42,29,36,.42)}
   .btn:hover{filter:brightness(1.04)}
   .chips button:hover{border-color:var(--ink-2)}
 }
+
+/* Breite Bildschirme (Surface quer, Laptop): mehr Fläche nutzen */
+@media (min-width:1200px){
+  .screen{max-width:1040px;padding-left:28px;padding-right:28px}
+  #v-heute .screen{max-width:1240px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:24px;row-gap:18px;align-items:start}
+  #v-heute .screen > *{grid-column:2;min-width:0}
+  #v-heute .screen > .topbar{grid-column:1 / -1}
+  #v-heute .screen > .hero{grid-column:1;grid-row:2 / span 8;align-self:start;position:sticky;top:24px}
+  .fab{top:360px}
+}

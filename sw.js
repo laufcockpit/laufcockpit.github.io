@@ -1,5 +1,5 @@
 /* Lauf-Cockpit Service Worker: App-Dateien netzwerk-zuerst (Updates kommen sofort), offline aus dem Cache. */
-const CACHE = 'laufcockpit-v6';
+const CACHE = 'laufcockpit-v7';
 const SHELL = ['./', 'index.html', 'app.css', 'app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE && k.startsWith('laufcockpit')).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
