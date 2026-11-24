@@ -64,7 +64,7 @@ const plural = (n, a, b) => n + ' ' + (n === 1 ? a : b);
 
 // ============ Speicher ============
 const KEY = 'laufcockpit.v1';
-const APP_VERSION = '5 (22.11.2026)';
+const APP_VERSION = '6 (24.11.2026)';
 const store = { laeufe: {}, ziele: {}, plan: {} };
 function load() {
   try { const raw = localStorage.getItem(KEY); if (raw) { const d = JSON.parse(raw); store.laeufe = d.laeufe || {}; store.ziele = d.ziele || {}; store.plan = d.plan || {}; } }
@@ -326,7 +326,8 @@ function renderTraining(R) {
   }
   if (R_.train === 'quali') {
     const Q = R.filter((r) => r.typ === 'Qualität');
-    const groups = ['Schwelle', 'Progression', 'Tempo', 'VO2max', 'Fartlek', 'Berg', ''];
+    const groups = ['Schwelle', 'Progression', 'Tempo', '10-km-Tempo', 'VO2max', 'Fartlek', 'Berg'];
+    groups.push(...Array.from(new Set(Q.map((r) => r.intensitaet || '').filter((x) => x && !groups.includes(x)))), '');
     body.append(h('p', { class: 'lede', text: 'Nach Format getrennt, denn vergleichen lassen sich nur gleiche Formate.' }));
     for (const gname of groups) {
       const rows = Q.filter((r) => (r.intensitaet || '') === gname).reverse();
